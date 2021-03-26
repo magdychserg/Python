@@ -433,12 +433,14 @@ SELECT * FROM black_list;
 -- посты пользователя
 CREATE TABLE user_blog(
 user_id BIGINT UNSIGNED NOT NULL,-- кто пишет пост
-date_blog DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- дата создания
+name_blog VARCHAR(100) NOT NULL,-- тема поста
 blog TEXT NOT NULL,-- текст поста
+date_blog DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- дата создания
+PRIMARY KEY (user_id, name_blog),
 CONSTRAINT fk_user_blog_users FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
-INSERT INTO user_blog VALUES (2, DEFAULT, '233edfkjkfsdklfj');
+INSERT INTO user_blog VALUES (2, DEFAULT, 'first blog', '233edfkjkfsdklfj');
 SELECT * FROM user_blog;
 
 
