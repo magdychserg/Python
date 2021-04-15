@@ -190,3 +190,8 @@ INSERT INTO storehouses_products (storehouse_id, product_id, value) VALUES
 -- 2.Выведите список товаров products и разделов catalogs, который соответствует товару.
 
    SELECT name, (SELECT name FROM catalogs WHERE id = products.catalog_id) AS catalogs FROM products ;
+
+-- with join
+SELECT products.name AS products , catalogs.name AS catalogs
+FROM products
+LEFT JOIN catalogs ON products.catalog_id = catalogs.id  ;
