@@ -1,3 +1,8 @@
+/* База данных пансионата. Задача базы. Регистрация гостей пансионата, размещение в номерах, предоставление различных услуг, питание.
+ * услуги встречи, проводы. 
+ */
+
+
 DROP DATABASE IF EXISTS pansionat;
 
 CREATE DATABASE pansionat;
@@ -73,6 +78,8 @@ VALUES
 	(5,'2021-05-01 10:00:00', '2021-05-11 11:00:00', DEFAULT, '1' ),
 	(6,'2021-06-01 10:00:00', '2021-06-11 11:00:00', DEFAULT, '1' );
 
+-- SELECT TIMESTAMPDIFF(DAY , data_arrival, data_departure) AS how_day FROM data_train dt WHERE id_guest = 1;
+-- SELECT id_guest FROM data_train dt WHERE data_arrival > '2021-06-01 10:00:00';
 -- база номеров и их статус комфортности
 CREATE TABLE room (
 	id_room bigint unsigned NOT NULL comment 'номер номера',
