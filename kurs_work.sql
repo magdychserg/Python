@@ -67,7 +67,7 @@ CREATE TABLE data_train (
 	data_departure datetime NOT NULL comment 'дата вылета',
 	need_meet tinyint(1) NOT NULL DEFAULT '0' comment 'надо ли встречать',
 	need_take tinyint(1) NOT NULL DEFAULT '0' comment 'надо ли провожать',
-	PRIMARY KEY (id_guest),
+	PRIMARY KEY (id_guest, data_arrival, data_departure),
 	CONSTRAINT fk_data_tarin_id FOREIGN KEY (id_guest) REFERENCES guest (id)
 );
 
@@ -250,7 +250,7 @@ DELIMITER ;
 VALUES
   (1, 'f', '2022-10-05', 'Moscow', DEFAULT);*/
 
--- представление показывающие гостей прибывающих после июня
+-- представление показывающие прибывающих гостей  
 CREATE or replace VIEW view_guest
 AS 
 SELECT  
@@ -266,8 +266,8 @@ FROM guest
 		ON guest.id = profiles.guest_id
 	JOIN data_train
 		ON guest.id = data_train.id_guest 
-WHERE DATE_FORMAT(data_train.data_arrival, '%m') > 06
-ORDER BY last_name ;
+-- WHERE DATE_FORMAT(data_train.data_arrival, '%m') > 06 comment 'можно выбрать месяц прибытия'
+ORDER BY  data_train.data_arrival, last_name ;
 
 SELECT * FROM view_guest;
 
