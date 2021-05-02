@@ -21,6 +21,9 @@ CREATE TABLE guest (
 	phone char(11) NOT NULL COMMENT 'телефон',
 	created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Дата создания',
 	PRIMARY KEY (id),
+	KEY guest_last_namex (last_name),
+	KEY guest_phonex (phone),
+	KEY guest_email (email),
 	UNIQUE KEY email_idx (email),
 	UNIQUE KEY phone_idx (phone)
  ) ENGINE=InnoDB ;
@@ -78,14 +81,15 @@ VALUES
 	(5,'2021-05-01 10:00:00', '2021-05-11 11:00:00', DEFAULT, '1' ),
 	(6,'2021-06-01 10:00:00', '2021-06-11 11:00:00', DEFAULT, '1' );
 
--- SELECT TIMESTAMPDIFF(DAY , data_arrival, data_departure) AS how_day FROM data_train dt WHERE id_guest = 1;
--- SELECT id_guest FROM data_train dt WHERE data_arrival > '2021-06-01 10:00:00';
+
 -- база номеров и их статус комфортности
 CREATE TABLE room (
 	id_room bigint unsigned NOT NULL comment 'номер номера',
 	number_room tinyint(1)  NOT NULL comment 'количетсво комнат в номере',
 	status_room char(20) NOT NULL DEFAULT 'standart' comment 'статус номера (стандарт, люкс, полулюкс)',
 	PRIMARY KEY (id_room),
+	KEY room_id_roomx (id_room),
+	KEY room_status_roomx (status_room),
 	UNIQUE KEY id_room_idx (id_room)
 ) ;
 
@@ -110,17 +114,14 @@ CREATE TABLE price_room_day (
 INSERT INTO
   	price_room_day (id , price_room)
 VALUES
-	(1, 4500 ),
-	(2, 7500 ),
-	(3, 5500 ),
-	(4, 6500 ),
-	(5, 4500 );
+	(1, 4500 ),	(2, 7500 ),	(3, 5500 ),	(4, 6500 ),	(5, 4500 );
 	
 -- каталог услуг
 CREATE TABLE services (
 	id bigint unsigned NOT NULL AUTO_INCREMENT,
 	name_services varchar(50) NOT NULL comment 'название услуг',
-	PRIMARY KEY (id)
+	PRIMARY KEY (id),
+	KEY services_name_servicesx (name_services)
 )ENGINE=InnoDB;
 
 INSERT INTO
@@ -134,6 +135,19 @@ VALUES
 	('Поездка в горы' ),
 	('Поездка нра океан' ),
 	('Сплав по реке');
+
+-- стоимость услуг за час
+CREATE TABLE price_services_hours (
+	id bigint UNSIGNED  NOT NULL,
+	price_services int(5) NOT NULL comment 'стоимость услуги в час',
+	PRIMARY KEY (id),
+	CONSTRAINT fk_price_services_hours_id FOREIGN KEY (id) REFERENCES services(id)
+) ;
+
+INSERT INTO
+  	price_services_hours (id , price_services)
+VALUES
+	(1, 2500 ),(2, 1500 ),(3, 1500 ),(4, 7500 ),(5, 4500 ),(6, 2500 ),(7, 4500 ),(8, 14500 );
 
 -- питание
 CREATE TABLE food (
@@ -150,48 +164,132 @@ VALUES
 	('Без питания' ),
 	('только завтраки' );
 	
--- тип отдыха
-CREATE TABLE rest (
-	id bigint unsigned NOT NULL AUTO_INCREMENT,
-	type_rest varchar (50) NOT NULL  comment 'тип отдыха (стандарт, маршрут выходного дня)',
-	PRIMARY KEY (id)
-)ENGINE=InnoDB;
+-- стоимость питанрия
+CREATE TABLE price_foods (
+	id bigint UNSIGNED  NOT NULL,
+	price_foods int(5) NOT NULL comment 'стоимость питанрия',
+	PRIMARY KEY (id),
+	CONSTRAINT fk_price_foods_id FOREIGN KEY (id) REFERENCES food(id)
+) ;
 
 INSERT INTO
-  	rest (type_rest)
+  	price_foods (id , price_foods)
 VALUES
-	('стандарт' ),
-	('маршрут выходного дня' );
+	(1, 2500 ),(2, 1500 ),(3, 0 ),(4, 500 );
+
 
 -- платные услуги которыми пользуется гость пансионата
 CREATE TABLE use_services (
 	id_guest bigint unsigned NOT NULL,
-	id_services bigint unsigned NOT NULL, 
-	PRIMARY KEY (id_services, id_guest),
+	id_services bigint unsigned NOT NULL,
+	time_services datetime NOT NULL DEFAULT CURRENT_TIMESTAMP comment 'время начала ',
+	duration_services time NOT NULL DEFAULT '1:00:00' comment'продолжительность услуги',
+	PRIMARY KEY (id_services, id_guest, time_services),
 	CONSTRAINT fk_use_services_id_services FOREIGN KEY (id_services) REFERENCES services(id),
 	CONSTRAINT fk_use_services_id_guest FOREIGN KEY (id_guest) REFERENCES guest(id)
 );
 INSERT INTO
-  	use_services ( id_guest,id_services)
+  	use_services ( id_guest,id_services,time_services, duration_services )
 VALUES
-	(1, 1 ), (1, 3 ),(1, 2 ),(2, 1 ),(2, 5 ),(1, 5 ),(3, 6 ),(5, 4 ),(4,2  ),(6, 3 );
+	(1, 1,'2021-05-01 10:00:00', '3:00:00'  ), 
+	(1, 3,'2021-06-01 10:00:00', DEFAULT  ),
+	(6, 1,'2021-05-01 10:00:00', DEFAULT  ),
+	(2, 1,'2021-08-01 10:00:00', DEFAULT  ),
+	(2, 5,'2021-06-01 10:00:00', '4:00:00'  ),
+	(1, 1,'2021-07-01 10:00:00', '2:00:00' ),
+	(3, 6,'2021-05-01 10:00:00', '12:00:00'  ),
+	(5, 4,'2021-04-01 10:00:00', '6:00:00'  ),
+	(4, 2,'2021-08-01 10:00:00', '4:00:00'   ),
+	(6, 3,'2021-09-01 10:00:00', '7:00:00'  );
 	
 	
 -- данные по проживанию гостя
 CREATE TABLE data_guest (
 	id_guest bigint unsigned NOT NULL AUTO_INCREMENT,
 	id_room bigint UNSIGNED NOT NULL,-- номер проживания
-	id_rest bigint UNSIGNED NOT NULL,-- тип отдыха
 	id_food bigint UNSIGNED NOT NULL,-- тип питания
 	CONSTRAINT fk_data_guest_id_guest FOREIGN KEY (id_guest) REFERENCES guest(id),
 	CONSTRAINT fk_data_guest_room FOREIGN KEY (id_room) REFERENCES room(id_room),
-	CONSTRAINT fk_data_guest_rest FOREIGN KEY (id_rest) REFERENCES rest(id),
 	CONSTRAINT fk_data_guest_food FOREIGN KEY (id_food) REFERENCES food(id),
 	PRIMARY KEY (id_guest)
 
 )ENGINE=InnoDB;
 INSERT INTO
-  	data_guest (id_guest, id_room, id_rest, id_food )
+  	data_guest (id_guest, id_room, id_food )
 VALUES
-	(1, 1, 1, 2 ), (2, 2, 1, 2 ), (3, 1, 2, 1 ),(4, 1, 1, 2 ),(5, 4, 1, 2 ),(6, 3, 1, 2 );
+	(1, 1,  2 ), (2, 2,  2 ), (3, 1,  1 ),(4, 1,  2 ),(5, 4,  2 ),(6, 3,  2 );
+
+DROP TRIGGER IF EXISTS check_birthday_before_insert;
+DROP TRIGGER IF EXISTS check_birthday_before_update;
+
+DELIMITER //
+
+CREATE TRIGGER check_birthday_before_insert BEFORE INSERT ON profiles
+FOR EACH ROW
+begin
+    IF NEW.birthday >= CURRENT_DATE() THEN -- если полученная дата рождения больше текущей - отправляем сигнал об ошибке
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insert Canceled. Birthday must be in the past!';
+    END IF;
+END//
+
+CREATE TRIGGER check_birthday_before_update BEFORE UPDATE ON profiles
+FOR EACH ROW
+begin
+    IF NEW.birthday >= CURRENT_DATE() THEN -- если полученная дата рождения больше текущей - отправляем сигнал об ошибке
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Update Canceled. Birthday must be in the past!';
+    END IF;
+END//
+
+
+DELIMITER ;
+
+/*
+ -- проверка тригера на добавление ошибочного дня рождения
+ INSERT INTO
+  profiles (guest_id , gender, birthday, city, country)
+VALUES
+  (1, 'f', '2022-10-05', 'Moscow', DEFAULT);*/
+
+-- представление показывающие гостей прибывающих после июня
+CREATE or replace VIEW view_guest
+AS 
+SELECT  
+	last_name,
+	first_name,
+	profiles.city,
+	profiles.country,
+	profiles.birthday,
+	data_train.data_arrival,
+	data_train.data_departure 
+FROM guest 
+    JOIN profiles 
+		ON guest.id = profiles.guest_id
+	JOIN data_train
+		ON guest.id = data_train.id_guest 
+WHERE DATE_FORMAT(data_train.data_arrival, '%m') > 06
+ORDER BY last_name ;
+
+SELECT * FROM view_guest;
+
+-- представление в котором собрана вся информация о используемых платных услугах гостей в период пребывания
+CREATE or replace VIEW view_guest_use_services
+AS 
+SELECT  
+	last_name,
+	first_name,
+	services.name_services ,
+	use_services.time_services,
+	HOUR(use_services.duration_services) AS `time_duration` ,
+	price_services_hours.price_services, 
+	sum((HOUR (use_services.duration_services))*price_services_hours.price_services)  AS total_price
+FROM guest 
+    JOIN use_services 
+		ON guest.id = use_services.id_guest 
+	JOIN services 
+		ON use_services.id_services= services.id 
+	JOIN price_services_hours
+		ON use_services.id_services = price_services_hours.id 
+GROUP BY last_name, services.name_services, use_services.duration_services ;
+
+SELECT * FROM view_guest_use_services;
 
